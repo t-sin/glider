@@ -6,6 +6,10 @@
 (defparameter *screen-width* 1200)
 (defparameter *screen-height* 800)
 
+
+;;;
+;;; move abstraction
+
 (defun make-move-linear (x y v deg)
   (let* ((rad (* deg (/ pi 180)))
          (dx (* v (cos rad)))
@@ -15,6 +19,15 @@
     (lambda (tick)
       (declare (ignore tick))
       (cons (prog1 x (incf x dx)) (prog1 y (incf y dy))))))
+
+(defun make-move (x y incfn)
+  (let ((x x)
+        (y y))
+    #'(lambda (tick)
+        (multiple-value-bind (newx newy)
+            (funcall incfn tick x y)
+          (setf x newx y newy)
+          (cons newx newy)))))
 
 ;;;
 ;;; game objects
@@ -56,7 +69,12 @@
 (defun shoot-arround (v d x y)
   (do ((deg d (+ deg 20)))
       ((>= deg (+ d 360)))
-    (alloc-object (make-move-linear x y v deg)
+    (alloc-object (make-move x y
+                             (let ((d deg))
+                               #'(lambda (tick x y)
+                                   (declare (ignore tick))
+                                   (values (+ x (* v (cos (* (/ pi 180) d))))
+                                           (+ y (* v (sin (* (/ pi 180) d))))))))
                   #'draw-bullet
                   #'disable-on-out)))
 
