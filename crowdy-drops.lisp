@@ -3,8 +3,9 @@
   (:use #:cl #:sdl2))
 (in-package #:crowdy-drops)
 
-(defparameter *screen-width* 800)
-(defparameter *screen-height* 600)
+(defparameter *screen-width* 1200)
+(defparameter *screen-height* 800)
+
 
 ;;;
 ;;; game objects
@@ -23,6 +24,7 @@
     (when idx
       (let ((obj (make-object* pos-fn draw-fn act-fn)))
         (setf (aref *objects* idx) obj)
+        (setf (object-available? obj) t)
         obj))))
 
 ;;;
@@ -30,9 +32,10 @@
 
 (defun draw-bullet (renderer pos tick)
   (declare (ignore tick))
-  (set-render-draw-color renderer 50 100 180 255)
-  (render-fill-rect renderer
-                    (make-rect (floor (car pos)) (floor (cdr pos)) 10 10)))
+  (set-render-draw-blend-mode renderer :blend)
+  (set-render-draw-color renderer 50 100 180 120)
+  (render-draw-rect renderer
+                    (make-rect (floor (- (car pos) 5)) (floor (- (cdr pos) 5)) 10 10)))
 
 (defun disable-on-out (obj pos tick)
   (declare (ignore tick))
@@ -42,36 +45,48 @@
               (> 0 y) (< *screen-height* y))
       (setf (object-available? obj) nil))))
 
-(defun shoot-arround (v)
-  (loop
-    :for deg :from 0 :upto 360 :by 15
-    :do (let ((obj (alloc-object (let ((dx (* v (cos (* deg (/ pi 180)))))
-                                       (dy (* v (sin (* deg (/ pi 180)))))
-                                       (x 400)
-                                       (y 300))
-                                   #'(lambda (tick)
-                                       (declare (ignore tick))
-                                       (cons (incf x dx) (incf y dy))))
-                                 #'draw-bullet
-                                 #'disable-on-out)))
-          (when obj
-            (setf (object-available? obj) t)))))
+(defun shoot-arround (v d x y)
+  (do ((deg d (+ deg 20)))
+      ((>= deg (+ d 360)))
+    (alloc-object (let ((dx (* v (cos (* deg (/ pi 180)))))
+                        (dy (* v (sin (* deg (/ pi 180)))))
+                        (x x)
+                        (y y))
+                    #'(lambda (tick)
+                        (declare (ignore tick))
+                        (cons (incf x dx) (incf y dy))))
+                  #'draw-bullet
+                  #'disable-on-out)))
+
+(defun shoot (v)
+  (alloc-object (let ((dy v)
+                      (y 600))
+                  #'(lambda (tick)
+                      (declare (ignore tick))
+                      (cons 400 (incf y dy))))
+                #'draw-bullet
+                #'disable-on-out))
 
 ;;;
 ;;; system
 
+(let ((d 0))
+  (defun act-enemy (tick)
+    (let ((half-width (/ *screen-width* 2))
+          (half-height (- (/ *screen-height* 2) 200)))
+      (when (zerop (mod tick 10))
+        (shoot-arround 2 (incf d 11.30) half-width half-height))
+      (cons half-width half-height))))
+        
+
+(defun draw-enemy (renderer pos tick)
+  (declare (ignore tick))
+  (set-render-draw-blend-mode renderer :blend)
+  (set-render-draw-color renderer 255 255 255 200)
+  (render-fill-rect renderer (make-rect (- (car pos) 10) (- (cdr pos) 10) 20 20)))
+
 (defun game-init ()
-  (alloc-object #'(lambda (tick)
-                    (when (zerop (mod tick 40))
-                      (dotimes (n 10)
-                        (shoot-arround (float (1+ (* 1.6 n))))))
-                    (cons 400 300))
-                #'(lambda (renderer pos tick)
-                    (declare (ignore tick))
-                    (set-render-draw-color renderer 255 0 0 255)
-                    (render-fill-rect renderer
-                                      (make-rect (floor (car pos)) (floor (cdr pos)) 20 20)))
-                #'disable-on-out))
+  (alloc-object #'act-enemy #'draw-enemy #'disable-on-out))
 
 (defparameter *tick* 0)
 
@@ -98,8 +113,11 @@
            (when (scancode= (scancode-value keysym) :scancode-escape)
              (push-event :quit)))
           (:idle ()
-           (set-render-draw-color renderer 255 255 255 0)
+           (set-render-draw-color renderer 255 255 255 255)
+           (set-render-draw-blend-mode renderer :add)
+           (set-render-draw-color renderer 0 0 20 255)
            (render-clear renderer)
            (game-proc renderer)
-           (render-present renderer))
+           (render-present renderer)
+           (delay (floor 10)))
           (:quit () t))))))
