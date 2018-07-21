@@ -6,6 +6,15 @@
 (defparameter *screen-width* 1200)
 (defparameter *screen-height* 800)
 
+(defun make-move-linear (x y v deg)
+  (let* ((rad (* deg (/ pi 180)))
+         (dx (* v (cos rad)))
+         (dy (* v (sin rad)))
+         (x x)
+         (y y))
+    (lambda (tick)
+      (declare (ignore tick))
+      (cons (prog1 x (incf x dx)) (prog1 y (incf y dy))))))
 
 ;;;
 ;;; game objects
@@ -32,7 +41,6 @@
 
 (defun draw-bullet (renderer pos tick)
   (declare (ignore tick))
-  (set-render-draw-blend-mode renderer :blend)
   (set-render-draw-color renderer 50 100 180 120)
   (render-draw-rect renderer
                     (make-rect (floor (- (car pos) 5)) (floor (- (cdr pos) 5)) 10 10)))
@@ -48,24 +56,9 @@
 (defun shoot-arround (v d x y)
   (do ((deg d (+ deg 20)))
       ((>= deg (+ d 360)))
-    (alloc-object (let ((dx (* v (cos (* deg (/ pi 180)))))
-                        (dy (* v (sin (* deg (/ pi 180)))))
-                        (x x)
-                        (y y))
-                    #'(lambda (tick)
-                        (declare (ignore tick))
-                        (cons (incf x dx) (incf y dy))))
+    (alloc-object (make-move-linear x y v deg)
                   #'draw-bullet
                   #'disable-on-out)))
-
-(defun shoot (v)
-  (alloc-object (let ((dy v)
-                      (y 600))
-                  #'(lambda (tick)
-                      (declare (ignore tick))
-                      (cons 400 (incf y dy))))
-                #'draw-bullet
-                #'disable-on-out))
 
 ;;;
 ;;; system
@@ -75,13 +68,12 @@
     (let ((half-width (/ *screen-width* 2))
           (half-height (- (/ *screen-height* 2) 200)))
       (when (zerop (mod tick 10))
-        (shoot-arround 2 (incf d 11.30) half-width half-height))
+        (shoot-arround 2 (incf d 102.30) half-width half-height))
       (cons half-width half-height))))
         
 
 (defun draw-enemy (renderer pos tick)
   (declare (ignore tick))
-  (set-render-draw-blend-mode renderer :blend)
   (set-render-draw-color renderer 255 255 255 200)
   (render-fill-rect renderer (make-rect (- (car pos) 10) (- (cdr pos) 10) 20 20)))
 
@@ -113,9 +105,8 @@
            (when (scancode= (scancode-value keysym) :scancode-escape)
              (push-event :quit)))
           (:idle ()
-           (set-render-draw-color renderer 255 255 255 255)
-           (set-render-draw-blend-mode renderer :add)
            (set-render-draw-color renderer 0 0 20 255)
+           (set-render-draw-blend-mode renderer :add)
            (render-clear renderer)
            (game-proc renderer)
            (render-present renderer)
