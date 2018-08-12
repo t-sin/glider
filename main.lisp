@@ -110,6 +110,21 @@
             (funcall (object-act-fn o) o pos *tick*))))
   (incf *tick*))
 
+(defstruct texture
+  renderer width height texture)
+
+(defun load-png (filename renderer)
+  (sdl2-image:init '(:png))
+  (let ((surface (sdl2-image:load-image filename)))
+    (make-texture :renderer renderer
+                  :width (surface-width surface)
+                  :height (surface-height surface)
+                  :texture (create-texture-from-surface renderer surface))))
+
+(defparameter *game-frame-image* nil)
+
+(game-init)
+
 (defun game-main ()
   (with-init (:video)
     (with-window (window :title "sdl2 test"
@@ -117,7 +132,7 @@
                               :h *screen-height*
                               :flags '(:shown))
       (with-renderer (renderer window :index -1 :flags '(:accelerrated))
-        (game-init)
+        (setf *game-frame-image* (load-png #P"bg.png" renderer))
         (with-event-loop (:method :poll)
           (:keyup (:keysym keysym)
            (when (scancode= (scancode-value keysym) :scancode-escape)
@@ -127,6 +142,8 @@
            (set-render-draw-blend-mode renderer :add)
            (render-clear renderer)
            (game-proc renderer)
+           (render-copy renderer (texture-texture *game-frame-image*)
+                        :dest-rect (make-rect 0 0 1200 800))
            (render-present renderer)
            (delay (floor 10)))
           (:quit () t))))))
