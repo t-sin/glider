@@ -1,7 +1,7 @@
 (in-package #:cl-user)
-(defpackage #:crowdy-drops
+(defpackage #:bhshooter
   (:use #:cl #:sdl2))
-(in-package #:crowdy-drops)
+(in-package #:bhshooter)
 
 (defparameter *screen-width* 1200)
 (defparameter *screen-height* 800)
