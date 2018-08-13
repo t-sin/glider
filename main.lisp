@@ -54,9 +54,17 @@
 
 (defun draw-bullet (renderer pos tick)
   (declare (ignore tick))
-  (set-render-draw-color renderer 50 100 180 120)
-  (render-draw-rect renderer
-                    (make-rect (floor (- (car pos) 5)) (floor (- (cdr pos) 5)) 10 10)))
+  ;; (set-render-draw-color renderer 50 100 180 120)
+  ;; (render-draw-rect renderer
+  ;;                   (make-rect (floor (- (car pos) 5)) (floor (- (cdr pos) 5)) 10 10))
+  (let* ((img (getf *game-images* :bullet))
+         (w (texture-width img))
+         (h (texture-height img))
+         (tex (texture-texture img)))
+    (set-texture-blend-mode tex :add)
+    (render-copy renderer tex
+                 :dest-rect (make-rect (floor (- (car pos) (/ w 2))) (floor (- (cdr pos) (/ h 2)))
+                                       w h))))
 
 (defun disable-on-out (obj pos tick)
   (declare (ignore tick))
