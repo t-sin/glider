@@ -135,8 +135,8 @@
 (defparameter *game-images* nil)
 
 (defun game-init (renderer)
-  (setf (getf *game-images* :bg) (load-png #P"bg.png" renderer))
-  (setf (getf *game-images* :bullet) (load-png #P"bullet.png" renderer)))
+  (setf (getf *game-images* :bg) (load-png #P"assets/bg.png" renderer))
+  (setf (getf *game-images* :bullet) (load-png #P"assets/bullet.png" renderer)))
 
 (defun game-proc (renderer)
   (set-render-draw-color renderer 0 0 20 255)
