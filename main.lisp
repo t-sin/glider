@@ -79,7 +79,7 @@
                   #'disable-on-out)))
 
 ;;;
-;;; system
+;;; shooter
 
 (let ((d 0))
   (defun act-enemy (tick)
@@ -95,12 +95,12 @@
   (set-render-draw-color renderer 255 255 255 200)
   (render-fill-rect renderer (make-rect (- (car pos) 10) (- (cdr pos) 10) 20 20)))
 
-(defun game-init ()
+(defun shooter-init ()
   (alloc-object #'act-enemy #'draw-enemy #'disable-on-out))
 
 (defparameter *tick* 0)
 
-(defun game-proc (renderer)
+(defun shooter-proc (renderer)
   (loop
     :for o :across *objects*
     :when (and o (object-available? o))
@@ -109,6 +109,9 @@
             (funcall (object-draw-fn o) renderer pos *tick*)
             (funcall (object-act-fn o) o pos *tick*))))
   (incf *tick*))
+
+;;;
+;;; system
 
 (defstruct texture
   renderer width height texture)
@@ -121,9 +124,19 @@
                   :height (surface-height surface)
                   :texture (create-texture-from-surface renderer surface))))
 
-(defparameter *game-frame-image* nil)
+(defparameter *game-images* nil)
 
-(game-init)
+(defun game-init (renderer)
+  (setf (getf *game-images* :bg) (load-png #P"bg.png" renderer))
+  (setf (getf *game-images* :bullet) (load-png #P"bullet.png" renderer)))
+
+(defun game-proc (renderer)
+  (set-render-draw-color renderer 0 0 20 255)
+  (set-render-draw-blend-mode renderer :add)
+  (render-clear renderer)
+  (shooter-proc renderer)
+  (render-copy renderer (texture-texture (getf *game-images* :bg))
+               :dest-rect (make-rect 0 0 1200 800)))
 
 (defun game-main ()
   (with-init (:video)
@@ -132,18 +145,14 @@
                               :h *screen-height*
                               :flags '(:shown))
       (with-renderer (renderer window :index -1 :flags '(:accelerrated))
-        (setf *game-frame-image* (load-png #P"bg.png" renderer))
+        (game-init renderer)
+        (shooter-init)
         (with-event-loop (:method :poll)
           (:keyup (:keysym keysym)
            (when (scancode= (scancode-value keysym) :scancode-escape)
              (push-event :quit)))
           (:idle ()
-           (set-render-draw-color renderer 0 0 20 255)
-           (set-render-draw-blend-mode renderer :add)
-           (render-clear renderer)
            (game-proc renderer)
-           (render-copy renderer (texture-texture *game-frame-image*)
-                        :dest-rect (make-rect 0 0 1200 800))
            (render-present renderer)
            (delay (floor 10)))
           (:quit () t))))))
