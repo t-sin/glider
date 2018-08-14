@@ -26,7 +26,7 @@
 
 (defun game-main ()
   (with-init (:video)
-    (with-window (window :title "sdl2 test"
+    (with-window (window :title "Nanka danmaku teki na yatsu"
                               :w *screen-width*
                               :h *screen-height*
                               :flags '(:shown))

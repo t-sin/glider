@@ -3,6 +3,10 @@
   (:use #:cl #:sdl2)
   (:export #:*screen-width*
            #:*screen-height*
+           #:*shooter-offset-x*
+           #:*shooter-offset-y*
+           #:*shooter-width*
+           #:*shooter-height*
            #:*game-images*
            #:texture-renderer
            #:texture-width
@@ -24,5 +28,10 @@
 
 (defparameter *screen-width* 1200)
 (defparameter *screen-height* 800)
+
+(defparameter *shooter-offset-x* 156)
+(defparameter *shooter-offset-y* 25)
+(defparameter *shooter-width* 650)
+(defparameter *shooter-height* 750)
 
 (defparameter *game-images* nil)

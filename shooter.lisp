@@ -2,8 +2,10 @@
 (defpackage #:bhshooter/shooter
   (:use #:cl #:sdl2)
   (:shadowing-import-from #:bhshooter/const
-                          #:*screen-width*
-                          #:*screen-height*
+                          #:*shooter-offset-x*
+                          #:*shooter-offset-y*
+                          #:*shooter-width*
+                          #:*shooter-height*
                           #:*game-images*
                           #:texture-texture
                           #:texture-width
@@ -75,8 +77,8 @@
   (declare (ignore tick))
   (let ((x (car pos))
         (y (cdr pos)))
-    (when (or (> 0 x) (< *screen-width* x)
-              (> 0 y) (< *screen-height* y))
+    (when (or (> -50 (- x *shooter-offset-x*)) (< *shooter-width* (- x *shooter-offset-x*))
+              (> -50 (- y *shooter-offset-y*)) (< *shooter-height* (- y *shooter-offset-x*)))
       (setf (object-available? obj) nil))))
 
 (defun shoot-arround (v d x y)
@@ -96,8 +98,8 @@
 
 (let ((d 0))
   (defun act-enemy (tick)
-    (let ((half-width (/ *screen-width* 2))
-          (half-height (- (/ *screen-height* 2) 200)))
+    (let ((half-width (/ *shooter-width* 2))
+          (half-height (- (/ *shooter-height* 2) 200)))
       (when (zerop (mod tick 10))
         (shoot-arround 2 (incf d 102.30) half-width half-height))
       (cons half-width half-height))))
