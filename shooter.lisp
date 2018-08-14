@@ -77,8 +77,8 @@
   (declare (ignore tick))
   (let ((x (car pos))
         (y (cdr pos)))
-    (when (or (> -50 (- x *shooter-offset-x*)) (< *shooter-width* (- x *shooter-offset-x*))
-              (> -50 (- y *shooter-offset-y*)) (< *shooter-height* (- y *shooter-offset-x*)))
+    (when (or (> -15 (- x *shooter-offset-x*)) (< *shooter-width* (- x *shooter-offset-x*))
+              (> -15 (- y *shooter-offset-y*)) (< *shooter-height* (- y *shooter-offset-y*)))
       (setf (actor-available? a) nil))))
 
 (defun shoot-arround (v d x y)
