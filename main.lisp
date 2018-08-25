@@ -1,7 +1,7 @@
-(defpackage #:bhshooter
+(defpackage #:glider
   (:use #:cl #:sdl2
-        #:bhshooter/shooter)
-  (:shadowing-import-from #:bhshooter/const
+        #:glider/shooter)
+  (:shadowing-import-from #:glider/const
                           #:*screen-width*
                           #:*screen-height*
                           #:*game-images*
@@ -10,11 +10,11 @@
                           #:texture-height
                           #:load-png)
   (:export #:game-main))
-(in-package #:bhshooter)
+(in-package #:glider)
 
 (defun game-init (renderer)
-  (setf (getf bhshooter/const:*game-images* :bg) (load-png #P"assets/bg.png" renderer))
-  (setf (getf bhshooter/const:*game-images* :bullet) (load-png #P"assets/bullet.png" renderer)))
+  (setf (getf glider/const:*game-images* :bg) (load-png #P"assets/bg.png" renderer))
+  (setf (getf glider/const:*game-images* :bullet) (load-png #P"assets/bullet.png" renderer)))
 
 (defun game-proc (renderer)
   (set-render-draw-color renderer 0 0 20 255)

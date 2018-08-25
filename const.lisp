@@ -1,5 +1,5 @@
 (in-package #:cl-user)
-(defpackage #:bhshooter/const
+(defpackage #:glider/const
   (:use #:cl #:sdl2)
   (:export #:*screen-width*
            #:*screen-height*
@@ -13,7 +13,7 @@
            #:texture-height
            #:texture-texture
            #:load-png))
-(in-package #:bhshooter/const)
+(in-package #:glider/const)
 
 (defstruct texture
   renderer width height texture)

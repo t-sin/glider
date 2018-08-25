@@ -1,7 +1,7 @@
 (in-package #:cl-user)
-(defpackage #:bhshooter/shooter
+(defpackage #:glider/shooter
   (:use #:cl #:sdl2)
-  (:shadowing-import-from #:bhshooter/const
+  (:shadowing-import-from #:glider/const
                           #:*shooter-offset-x*
                           #:*shooter-offset-y*
                           #:*shooter-width*
@@ -12,7 +12,7 @@
                           #:texture-height)
   (:export #:shooter-init
            #:shooter-proc))
-(in-package #:bhshooter/shooter)
+(in-package #:glider/shooter)
 
 ;;;
 ;;; actors
@@ -103,7 +103,7 @@
   (let* ((img (getf *game-images* :bullet))
          (w (texture-width img))
          (h (texture-height img))
-         (tex (bhshooter/const:texture-texture img)))
+         (tex (glider/const:texture-texture img)))
     (set-texture-blend-mode tex :add)
     (render-copy renderer tex
                  :dest-rect (make-rect (floor (- (car pos) (/ w 2)))
