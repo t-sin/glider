@@ -50,19 +50,22 @@
     (when idx
       (aref (vm-actors vm) idx))))
 
-(defun vm-shot-to (vm sx sy v tx ty)
+(defun rad-to-deg (rad)
+  (* rad (/ 180 PI)))
+
+(defun deg-to-rad (deg)
+  (* deg (/ PI 180)))
+
+(defun vm-shot-to (vm sx sy v rad)
   (let ((a (alloc-actor vm)))
     (when a
       (setf (actor-available? a) t
             (actor-px a) sx
             (actor-py a) sy
-            (actor-pos-fn a) (let* ((d (sqrt (+ (expt (- tx sx) 2)
-                                                (expt (- ty sy) 2))))
-                                    (dx (* v (/ (- tx sx) d)))
-                                    (dy (* v (/ (- ty sy) d))))
-                               #'(lambda (x y tick)
-                                   (declare (ignore tick))
-                                   (cons (+ x dx) (+ y dy))))))))
+            (actor-pos-fn a) #'(lambda (x y tick)
+                                 (declare (ignore tick))
+                                 (cons (+ x (* v (cos rad)))
+                                       (+ y (* v (sin rad)))))))))
 
 (defun vm-shot (vm sx sy move-fn)
   (let ((a (alloc-actor vm)))
@@ -88,9 +91,12 @@
 ;;; shooter
 
 (defparameter *event-queue*
-  '((100 . (:shot-to 500 500 0.5 300 300))
-    (100 . (:shot-to 500 500 0.7 300 300))
-    (100 . (:shot-to 500 500 0.9 300 300))))
+  `(,@(loop
+        :for n :from 0 :upto 200
+        :append (loop
+                  :for n2 :from 2 :upto 6
+                  :for deg := (+ 90 (* 80 (sin (/ n PI))))
+                  :collect (cons (* n 5) `(:shot-to 500 100 ,(* n2 0.7) ,(deg-to-rad deg)))))))
 
 (defun draw-bullet (renderer pos dir tick)
   (declare (ignore tick))
