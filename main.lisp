@@ -26,7 +26,7 @@
 
 (defun game-main ()
   (with-init (:video)
-    (with-window (window :title "Nanka danmaku teki na yatsu"
+    (with-window (window :title "The Glider"
                               :w *screen-width*
                               :h *screen-height*
                               :flags '(:shown))

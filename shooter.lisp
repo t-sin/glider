@@ -10,36 +10,20 @@
                           #:texture-texture
                           #:texture-width
                           #:texture-height)
+  (:import-from #:glider/util
+                #:to-deg
+                #:to-rad)
+  (:import-from #:glider/actors
+                #:actor-x
+                #:actor-y
+                #:actor-angle
+                #:actor-available?
+                #:actor-act-fn
+                #:actor-draw-fn
+                #:init-actors)
   (:export #:shooter-init
            #:shooter-proc))
 (in-package #:glider/shooter)
-
-;;;
-;;; actors
-
-(defstruct actor
-  tag available? start-tick px py
-  pos-fn draw-fn act-fn)
-
-(defun init-actors ()
-  (let ((array (make-array 5000)))
-    (loop
-      :for n :from 0 :below (length array)
-      :do (setf (aref array n) (make-actor)))
-    array))
-
-
-;; disable-on-out
-(defun disable-on-out (a pos tick)
-  (declare (ignore tick))
-  (let ((x (car pos))
-        (y (cdr pos)))
-    (when (or (> -15 (- x *shooter-offset-x*)) (< *shooter-width* (- x *shooter-offset-x*))
-              (> -15 (- y *shooter-offset-y*)) (< *shooter-height* (- y *shooter-offset-y*)))
-      (setf (actor-available? a) nil))))
-
-;;;
-;;; vm
 
 (defstruct vm
   actors tick equeue)
@@ -50,29 +34,23 @@
     (when idx
       (aref (vm-actors vm) idx))))
 
-(defun rad-to-deg (rad)
-  (* rad (/ 180 PI)))
-
-(defun deg-to-rad (deg)
-  (* deg (/ PI 180)))
-
-(defun vm-shot-to (vm sx sy v rad)
+(defun vm-shot-to (vm sx sy tx ty v)
   (let ((a (alloc-actor vm)))
     (when a
       (setf (actor-available? a) t
-            (actor-px a) sx
-            (actor-py a) sy
-            (actor-pos-fn a) #'(lambda (x y tick)
-                                 (declare (ignore tick))
-                                 (cons (+ x (* v (cos rad)))
-                                       (+ y (* v (sin rad)))))))))
+            (actor-x a) sx
+            (actor-y a) sy
+            (actor-act-fn a) #'(lambda (vm a)
+                                 (declare (ignore vm))
+                                 (incf (actor-x a) (/ v tx))
+                                 (incf (actor-y a) (/ v ty)))))))
 
-(defun vm-shot (vm sx sy move-fn)
+(defun vm-shot (vm sx sy act-fn)
   (let ((a (alloc-actor vm)))
     (setf (actor-available? a) t
-          (actor-px a) sx
-          (actor-py a) sy
-          (actor-pos-fn a) move-fn)))
+          (actor-x a) sx
+          (actor-y a) sy
+          (actor-act-fn a) act-fn)))
 
 (defun execute (vm)
   (loop
@@ -90,45 +68,39 @@
 ;;;
 ;;; shooter
 
+;; TODO: use queues (instead of plain lists)
 (defparameter *event-queue*
   `(,@(loop
         :for n :from 0 :upto 200
-        :append (loop
-                  :for n2 :from 2 :upto 6
-                  :for deg := (+ 90 (* 80 (sin (/ n PI))))
-                  :collect (cons (* n 5) `(:shot-to 500 100 ,(* n2 0.7) ,(deg-to-rad deg)))))))
-
-(defun draw-bullet (renderer pos dir tick)
-  (declare (ignore tick))
-  (let* ((img (getf *game-images* :bullet))
-         (w (texture-width img))
-         (h (texture-height img))
-         (tex (glider/const:texture-texture img)))
-    (set-texture-blend-mode tex :add)
-    (render-copy renderer tex
-                 :dest-rect (make-rect (floor (- (car pos) (/ w 2)))
-                                       (floor (-(cdr pos) (/ h 2)))
-                                       w h))))
+        :collect (cons (* n 5)
+                       `(:shot 500 150 ,(let ((rad (to-rad (* 10 n))))
+                                          (lambda (vm a)
+                                            (incf (actor-x a) (cos rad))
+                                            (incf (actor-y a) (sin rad)))))))))
 
 (defparameter *vm* nil)
 
 (defun shooter-init ()
-  (setf *vm* (make-vm :tick 0
-                      :actors (init-actors)
-                      :equeue *event-queue*)))
+  (let ((actors (init-actors)))
+    (loop
+      :for a :across actors
+      :do (setf (actor-draw-fn a)
+                (lambda (renderer a)
+                  (set-render-draw-color renderer 0 255 100 100)
+                  (render-draw-rect renderer (make-rect (floor (actor-x a))
+                                                        (floor (actor-y a))
+                                                        10 10)))))
+    (setf *vm* (make-vm :tick 0
+                        :actors actors
+                        :equeue *event-queue*))))
 
 (defun shooter-proc (renderer)
   (let ((tick (vm-tick *vm*)))
     (execute *vm*)
     (loop
       :for a :across (vm-actors *vm*)
-      :when (and a (actor-available? a))
-      :do (let ((pos (funcall (actor-pos-fn a)
-                              (actor-px a) (actor-py a) tick)))
-            (setf (actor-px a) (car pos)
-                  (actor-py a) (cdr pos))
-            (when pos
-              (funcall #'draw-bullet renderer pos 0 tick)
-;;              (funcall (actor-act-fn a) a pos tick)
-              ))))
+      :when (actor-available? a)
+      :do (progn
+            (funcall (actor-act-fn a) *vm* a)
+            (funcall (actor-draw-fn a) renderer a))))
   (incf (vm-tick *vm*)))
