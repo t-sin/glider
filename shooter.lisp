@@ -70,13 +70,15 @@
 
 ;; TODO: use queues (instead of plain lists)
 (defparameter *event-queue*
-  `(,@(loop
-        :for n :from 0 :upto 200
-        :collect (cons (* n 5)
-                       `(:shot 500 150 ,(let ((rad (to-rad (* 10 n))))
-                                          (lambda (vm a)
-                                            (incf (actor-x a) (cos rad))
-                                            (incf (actor-y a) (sin rad)))))))))
+  `((0 . (:shot 500 150 ,(let* ((count 0)
+                                (ph (to-rad 90)))
+                           (lambda (vm a)
+                             (when (mod count 10)
+                               (vm-shot *vm* (actor-x a) (actor-y a)
+                                        (lambda (vm a)
+                                          (incf (actor-x a) (cos ph))
+                                          (incf (actor-y a) (sin ph))))
+                               (incf ph (to-rad 20)))))))))
 
 (defparameter *vm* nil)
 
