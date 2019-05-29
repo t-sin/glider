@@ -7,6 +7,8 @@
            #:actor-x
            #:actor-y
            #:actor-angle
+           #:actor-start-tick
+           #:actor-sfn
            #:actor-available?
            #:actor-act-fn
            #:actor-draw-fn
@@ -15,7 +17,8 @@
 (in-package #:glider/actors)
 
 (defstruct actor
-  x y angle
+  x y angle sfn
+  start-tick
   available?
   act-fn draw-fn)
 
