@@ -22,11 +22,15 @@
 (in-package #:glider/shooter)
 
 
-(defun %aim (gw x y)
+(defun %aim-n-way (gw x y) ;; not primitive
   (lambda (vm a sfn)
     (multiple-value-bind (i n)
         (funcall sfn)
       (+ (atan y x) (to-rad (* (- i (/ n 2)) gw))))))
+
+(defun %aim (x y)
+  (lambda (vm a sfn)
+    (atan y x)))
 
 (defun %rotate (gw)
   (lambda (vm a sfn)
@@ -35,9 +39,11 @@
       (to-rad (+ (* (actor-start-tick a) (actor-start-tick a) 0.03)
                  (* (- i (/ n 2)) gw))))))
 
-(defun %move-1 (tri-fn ang-fn v)
-  (lambda (vm a sfn)
-    (* (funcall tri-fn (funcall ang-fn vm a sfn)) v)))
+(defun %move-1 (ang-fn v)
+  (flet ((move (f)
+           (lambda (vm a sfn)
+             (* (funcall f (funcall ang-fn vm a sfn)) v))))
+    (list (move #'cos) (move #'sin))))
 
 (defun %move-2 (tri-fn ang-fn init-v v)
   (lambda (vm a sfn)
@@ -57,14 +63,17 @@
                                                       (%move-2 #'sin (%rotate 72) 1 14)))
                                         5))))
     (100 . (:fire 480 180 ,($when (%count-n? 13)
-                                  ($times ($fire ($move (%move-1 #'cos (%aim 10 1 3) 3)
-                                                        (%move-1 #'sin (%aim 10 1 3) 3)))
+                                  ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 1 3) 3)))
                                           7))))
     (100 . (:fire 720 180 ,($when (%count-n? 13)
-                                  ($times ($fire ($move (%move-1 #'cos (%aim 10 -1 3) 3)
-                                                        (%move-1 #'sin (%aim 10 -1 3) 3)))
+                                  ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 -1 3) 3)))
                                           7))))
-))
+    (200 . (:fire 600 200 ,($progn (apply #'$move (%move-1 (%aim 10 200) 5))
+                                   ($schedule
+                                    `(10 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
+                                    `(20 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
+                                    `(30 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))))))
+    ))
 
 (defparameter *vm* nil)
 
