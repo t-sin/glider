@@ -5,5 +5,15 @@
   :author "TANAKA Shinichi"
   :license "?"
   :depends-on ("sdl2"
-               "sdl2-image"
-               "glider/main"))
+               "sdl2-image")
+  :components ((:module "src"
+                :components ((:file "const")
+                             (:file "util")
+                             (:module "shooter"
+                              :components ((:file "actors")
+                                           (:file "vm")
+                                           (:file "combinators"))
+                              :serial t)
+                             (:file "game")
+                             (:file "main"))
+                :serial t)))

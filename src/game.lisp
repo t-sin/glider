@@ -1,5 +1,5 @@
 (in-package #:cl-user)
-(defpackage #:glider/shooter
+(defpackage #:glider/game
   (:use #:cl
         #:sdl2
         #:glider/util
@@ -17,7 +17,7 @@
                           #:texture-height)
   (:export #:shooter-init
            #:shooter-proc))
-(in-package #:glider/shooter)
+(in-package #:glider/game)
 
 
 (defun %aim-n-way (gw x y) ;; not primitive

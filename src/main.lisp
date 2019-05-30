@@ -1,6 +1,6 @@
 (defpackage #:glider
   (:use #:cl #:sdl2
-        #:glider/shooter)
+        #:glider/game)
   (:shadowing-import-from #:glider/const
                           #:*screen-width*
                           #:*screen-height*
