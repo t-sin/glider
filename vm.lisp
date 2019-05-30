@@ -24,18 +24,6 @@
     (when idx
       (aref (vm-actors vm) idx))))
 
-(defun vm-shot-to (vm sx sy tx ty v)
-  (let ((a (alloc-actor vm)))
-    (when a
-      (setf (actor-available? a) t
-            (actor-x a) sx
-            (actor-y a) sy
-            (actor-sfn a) sfn
-            (actor-act-fn a) #'(lambda (vm a)
-                                 (declare (ignore vm))
-                                 (incf (actor-x a) (/ v tx))
-                                 (incf (actor-y a) (/ v ty)))))))
-
 (defun vm-fire (vm sx sy act-fn)
   (let ((a (alloc-actor vm)))
     (when a
@@ -52,7 +40,8 @@
     :while (and queue (= (car e) (vm-tick vm)))
     :do (progn
           (let ((op (cdr e)))
-            (ecase (car op)
+            (case (car op)
               (:fire (apply #'vm-fire vm (cdr op)))
-              (:interrupt)))
+              (:interrupt)
+              (t nil)))
           (setf (vm-etable vm) (cdr queue)))))
