@@ -21,7 +21,8 @@
 
            ;; side-effective
            #:$move
-           #:$fire))
+           #:$fire
+           #:$disable))
 (in-package #:glider/combinators)
 
 (defun $id (&rest args) args)
@@ -80,3 +81,8 @@
              (lambda (vm a %sfn)
                (declare (ignore %sfn))
                (funcall f vm a sfn)))))
+
+(defun $disable ()
+  (lambda (vm a sfn)
+    (declare (ignore vm sfn))
+    (setf (actor-available? a) nil)))

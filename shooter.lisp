@@ -54,12 +54,22 @@
     (declare (ignore sfn))
     (zerop (mod (- (vm-tick vm) (actor-start-tick a)) n))))
 
+(defun %out-of? (x1 y1 x2 y2)
+  (lambda (vm a sfn)
+    (declare (ignore vm sfn))
+    (let ((x (actor-x a))
+          (y (actor-y a)))
+      (or (< x x1) (< x2 x)
+          (< y y1) (< y2 y)))))
+
 ;; TODO: use queues (instead of plain lists)
 (defparameter *event-table*
   `((0 . (:fire ,(/ *shooter-width* 2) 100
           ,($when (%count-n? 2)
-                  ($times ($fire ($move (%move-2 #'cos (%rotate 72) 1 14)
-                                        (%move-2 #'sin (%rotate 72) 1 14)))
+                  ($times ($fire ($progn ($move (%move-2 #'cos (%rotate 72) 1 14)
+                                                (%move-2 #'sin (%rotate 72) 1 14))
+                                         ($when (%out-of? 0 0 *shooter-width* *shooter-height*)
+                                                ($disable))))
                           5))))
     (100 . (:fire ,(- (/ *shooter-width* 2) 150) 70
             ,($when (%count-n? 13)
