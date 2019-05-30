@@ -11,11 +11,13 @@
 
            ;; control flow
            #:$when
+           #:$progn
            #:$times
 
            ;; stateful
            #:$count
            #:$while
+           #:$schedule
 
            ;; side-effective
            #:$move
@@ -36,6 +38,22 @@
       (let ((%i i) (%n n))
         (flet ((n* () (values %i %n)))
           (funcall f vm a #'n*))))))
+
+(defun $progn (&rest flis)
+  (lambda (vm a sfn)
+    (dolist (f flis)
+      (funcall f vm a sfn))))
+
+(defun $schedule (events)
+  (let ((e (first events))
+        (events (rest events)))
+    (lambda (vm a sfn)
+      (unless (null e)
+        (funcall (cdr e) vm a sfn)
+        (when (> (car e) (- (vm-tick vm) (actor-start-tick a)))
+          (setf e (first events)
+                events (rest events)))))))
+
 
 (defun $while (f frames)
   (let ((start nil))
