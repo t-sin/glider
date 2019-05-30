@@ -1,8 +1,9 @@
 (in-package #:cl-user)
 (defpackage #:glider/util
-  (:use #:cl)
+  (:use #:cl #:glider/const)
   (:export #:to-deg
-           #:to-rad))
+           #:to-rad
+           #:onto-screen))
 (in-package #:glider/util)
 
 (defun to-deg (rad)
@@ -10,3 +11,7 @@
 
 (defun to-rad (deg)
   (* deg (/ PI 180)))
+
+(defun onto-screen (x y)
+  (values (floor (+ *shooter-offset-x* x))
+          (floor (+ *shooter-offset-y* y))))
