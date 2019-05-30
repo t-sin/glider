@@ -2,6 +2,7 @@
 (defpackage #:glider/shooter
   (:use #:cl
         #:sdl2
+        #:glider/util
         #:glider/vm
         #:glider/actors
         #:glider/combinators)
@@ -14,9 +15,6 @@
                           #:texture-texture
                           #:texture-width
                           #:texture-height)
-  (:import-from #:glider/util
-                #:to-deg
-                #:to-rad)
   (:export #:shooter-init
            #:shooter-proc))
 (in-package #:glider/shooter)
@@ -58,33 +56,33 @@
 
 ;; TODO: use queues (instead of plain lists)
 (defparameter *event-table*
-  `((0 . (:fire 600 200 ,($when (%count-n? 2)
-                                ($times ($fire ($move (%move-2 #'cos (%rotate 72) 1 14)
-                                                      (%move-2 #'sin (%rotate 72) 1 14)))
-                                        5))))
-    (100 . (:fire 480 180 ,($when (%count-n? 13)
-                                  ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 1 3) 3)))
-                                          7))))
-    (100 . (:fire 720 180 ,($when (%count-n? 13)
-                                  ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 -1 3) 3)))
-                                          7))))
-    (200 . (:fire 600 200 ,($progn (apply #'$move (%move-1 (%aim 10 200) 5))
-                                   ($schedule
-                                    `(10 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
-                                    `(20 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
-                                    `(30 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))))))
+  `((0 . (:fire ,(/ *shooter-width* 2) 100
+          ,($when (%count-n? 2)
+                  ($times ($fire ($move (%move-2 #'cos (%rotate 72) 1 14)
+                                        (%move-2 #'sin (%rotate 72) 1 14)))
+                          5))))
+    (100 . (:fire ,(- (/ *shooter-width* 2) 150) 70
+            ,($when (%count-n? 13)
+                    ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 1 3) 3)))
+                            7))))
+    (100 . (:fire ,(+ (/ *shooter-width* 2) 150) 70
+            ,($when (%count-n? 13)
+                    ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 -1 3) 3)))
+                            7))))
+    (200 . (:fire ,(/ *shooter-width* 2) 200
+            ,($progn (apply #'$move (%move-1 (%aim 10 200) 5))
+                     ($schedule
+                      `(10 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
+                      `(20 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
+                      `(30 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))))))
     ))
 
 (defparameter *vm* nil)
 
-(defun transform-onto-screen (x y)
-  (values (floor (+ *shooter-offset-x* x))
-          (floor (+ *shooter-offset-y* y))))
-
 (defun default-drawer ()
   (lambda (renderer a)
     (multiple-value-bind (x y)
-        (transform-onto-screen (actor-x a) (actor-y a))
+        (onto-screen (actor-x a) (actor-y a))
       (set-render-draw-color renderer 0 255 100 100)
       (let* ((r 10)
              (r/2 (floor (/ r 2))))
