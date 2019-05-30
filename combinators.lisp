@@ -44,16 +44,14 @@
     (dolist (f flis)
       (funcall f vm a sfn))))
 
-(defun $schedule (events)
+(defun $schedule (&rest events)
   (let ((e (first events))
         (events (rest events)))
     (lambda (vm a sfn)
-      (unless (null e)
+      (when (and (consp e) (> (- (vm-tick vm) (actor-start-tick a)) (car e)))
         (funcall (cdr e) vm a sfn)
-        (when (> (car e) (- (vm-tick vm) (actor-start-tick a)))
-          (setf e (first events)
-                events (rest events)))))))
-
+        (setf e (first events)
+              events (rest events))))))
 
 (defun $while (f frames)
   (let ((start nil))
