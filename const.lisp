@@ -29,9 +29,9 @@
 (defparameter *screen-width* 1200)
 (defparameter *screen-height* 800)
 
-(defparameter *shooter-offset-x* 265)
+(defparameter *shooter-offset-x* 315)
 (defparameter *shooter-offset-y* 25)
-(defparameter *shooter-width* 650)
+(defparameter *shooter-width* 550)
 (defparameter *shooter-height* 750)
 
 (defparameter *game-images* nil)
