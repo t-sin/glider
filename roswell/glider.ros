@@ -1,0 +1,18 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(:glider) :silent t)
+  )
+
+(defpackage :ros.script.glider.3768218701
+  (:use :cl))
+(in-package :ros.script.glider.3768218701)
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (glider:game-main))
+;;; vim: set ft=lisp lisp:
