@@ -77,16 +77,24 @@
 
 (defparameter *vm* nil)
 
+(defun transform-onto-screen (x y)
+  (values (floor (+ *shooter-offset-x* x))
+          (floor (+ *shooter-offset-y* y))))
+
+(defun default-drawer ()
+  (lambda (renderer a)
+    (multiple-value-bind (x y)
+        (transform-onto-screen (actor-x a) (actor-y a))
+      (set-render-draw-color renderer 0 255 100 100)
+      (let* ((r 10)
+             (r/2 (floor (/ r 2))))
+        (render-fill-rect renderer (make-rect (- x r/2) (- y r/2) r r))))))
+
 (defun shooter-init ()
   (let ((actors (init-actors)))
     (loop
       :for a :across actors
-      :do (setf (actor-draw-fn a)
-                (lambda (renderer a)
-                  (set-render-draw-color renderer 0 255 100 100)
-                  (render-fill-rect renderer (make-rect (floor (actor-x a))
-                                                        (floor (actor-y a))
-                                                        10 10)))
+      :do (setf (actor-draw-fn a) (default-drawer)
                 (actor-sfn a) (lambda () nil)))
     (setf *vm* (make-vm :tick 0
                         :actors actors
