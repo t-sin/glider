@@ -8,12 +8,21 @@
            #:*shooter-width*
            #:*shooter-height*
            #:*game-images*
+
            #:texture-renderer
            #:texture-width
            #:texture-height
            #:texture-texture
-           #:load-png))
+           #:load-png
+
+           #:global
+           #:make-global
+           #:global-vm
+           #:global-scene-fn))
 (in-package #:glider/const)
+
+(defstruct global
+  scene-fn vm)
 
 (defstruct texture
   renderer width height texture)

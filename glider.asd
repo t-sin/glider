@@ -14,6 +14,7 @@
                                            (:file "vm")
                                            (:file "combinators"))
                               :serial t)
-                             (:file "game")
+                             (:module "scenes"
+                              :components ((:file "shooter")))
                              (:file "main"))
                 :serial t)))

@@ -1,18 +1,17 @@
 (defpackage #:glider
   (:use #:cl #:sdl2
-        #:glider/game)
-  (:shadowing-import-from #:glider/const
-                          #:*screen-width*
-                          #:*screen-height*
-                          #:*game-images*
-                          #:texture-texture
-                          #:texture-width
-                          #:texture-height
-                          #:load-png)
+        #:glider/const)
+  (:import-from #:glider/scenes/shooter
+                #:init-shooter)
   (:export #:game-main))
 (in-package #:glider)
 
+(defparameter *global* nil)
+
 (defun game-init (renderer)
+  (setf *global* (make-global))
+  (setf (global-scene-fn *global*) (init-shooter *global*))
+
   (setf (getf glider/const:*game-images* :bg) (load-png #P"assets/bg.png" renderer))
   (setf (getf glider/const:*game-images* :bullet) (load-png #P"assets/bullet.png" renderer)))
 
@@ -20,7 +19,7 @@
   (set-render-draw-color renderer 0 0 20 255)
   (set-render-draw-blend-mode renderer :add)
   (render-clear renderer)
-  (shooter-proc renderer)
+  (funcall (global-scene-fn *global*) renderer)
   (render-copy renderer (texture-texture (getf *game-images* :bg))
                :dest-rect (make-rect 0 0 1200 800)))
 
@@ -32,7 +31,6 @@
                               :flags '(:shown))
       (with-renderer (renderer window :index -1 :flags '(:accelerrated))
         (game-init renderer)
-        (shooter-init)
         (with-event-loop (:method :poll)
           (:keyup (:keysym keysym)
            (when (scancode= (scancode-value keysym) :scancode-escape)

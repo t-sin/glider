@@ -1,24 +1,14 @@
 (in-package #:cl-user)
-(defpackage #:glider/game
+(defpackage #:glider/scenes/shooter
   (:use #:cl
         #:sdl2
+        #:glider/const
         #:glider/util
         #:glider/vm
         #:glider/actors
         #:glider/combinators)
-  (:shadowing-import-from #:glider/const
-                          #:*shooter-offset-x*
-                          #:*shooter-offset-y*
-                          #:*shooter-width*
-                          #:*shooter-height*
-                          #:*game-images*
-                          #:texture-texture
-                          #:texture-width
-                          #:texture-height)
-  (:export #:shooter-init
-           #:shooter-proc))
-(in-package #:glider/game)
-
+  (:export #:init-shooter))
+(in-package #:glider/scenes/shooter)
 
 (defun %aim-n-way (gw x y) ;; not primitive
   (lambda (vm a sfn)
@@ -63,7 +53,7 @@
           (< y y1) (< y2 y)))))
 
 ;; TODO: use queues (instead of plain lists)
-(defparameter *event-table*
+(defun make-event ()
   `((0 . (:fire ,(/ *shooter-width* 2) 100
           ,($when (%count-n? 2)
                   ($times ($fire ($progn ($move (%move-2 #'cos (%rotate 72) 1 14)
@@ -87,8 +77,6 @@
                       `(30 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))))))
     ))
 
-(defparameter *vm* nil)
-
 (defun default-drawer ()
   (lambda (renderer a)
     (multiple-value-bind (x y)
@@ -98,22 +86,22 @@
              (r/2 (floor (/ r 2))))
         (render-fill-rect renderer (make-rect (- x r/2) (- y r/2) r r))))))
 
-(defun shooter-init ()
+(defun init-shooter (g)
   (let ((actors (init-actors)))
     (loop
       :for a :across actors
       :do (setf (actor-draw-fn a) (default-drawer)
                 (actor-sfn a) (lambda () nil)))
-    (setf *vm* (make-vm :tick 0
-                        :actors actors
-                        :etable *event-table*))))
-
-(defun shooter-proc (renderer)
-  (execute *vm*)
-  (loop
-    :for a :across (vm-actors *vm*)
-    :when (actor-available? a)
-    :do (progn
-          (funcall (actor-act-fn a) *vm* a (actor-sfn a))
-          (funcall (actor-draw-fn a) renderer a)))
-  (incf (vm-tick *vm*)))
+    (setf (global-vm g) (make-vm :tick 0
+                                 :actors actors
+                                 :etable (make-event)))
+  (lambda (renderer)
+    (let ((vm (global-vm g)))
+      (execute vm)
+      (loop
+        :for a :across (vm-actors vm)
+        :when (actor-available? a)
+        :do (progn
+              (funcall (actor-act-fn a) vm a (actor-sfn a))
+              (funcall (actor-draw-fn a) renderer a)))
+      (incf (vm-tick vm))))))
