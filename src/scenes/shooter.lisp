@@ -98,10 +98,17 @@
   (lambda (renderer)
     (let ((vm (global-vm g)))
       (execute vm)
+      (render-clear renderer)
+      (set-render-draw-color renderer 0 0 25 255)
+      (set-render-draw-blend-mode renderer :blend)
+      (render-fill-rect renderer (make-rect 0 0 *screen-width* *screen-height*))
+      (set-render-draw-blend-mode renderer :add)
       (loop
         :for a :across (vm-actors vm)
         :when (actor-available? a)
         :do (progn
               (funcall (actor-act-fn a) vm a (actor-sfn a))
               (funcall (actor-draw-fn a) renderer a)))
+      (render-copy renderer (texture-texture (getf *game-images* :bg))
+                   :dest-rect (make-rect 0 0 1200 800))
       (incf (vm-tick vm))))))
