@@ -15,6 +15,7 @@
                                            (:file "combinators"))
                               :serial t)
                              (:module "scenes"
-                              :components ((:file "shooter")))
+                              :components ((:file "title")
+                                           (:file "shooter")))
                              (:file "main"))
                 :serial t)))

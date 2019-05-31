@@ -3,6 +3,8 @@
         #:glider/const)
   (:import-from #:glider/scenes/shooter
                 #:init-shooter)
+  (:import-from #:glider/scenes/title
+                #:init-title)
   (:export #:game-main))
 (in-package #:glider)
 
@@ -10,19 +12,14 @@
 
 (defun game-init (renderer)
   (setf *global* (make-global))
-  (setf (global-scene-fn *global*) (init-shooter *global*))
+  (setf (global-scene-fn *global*) (init-title *global*))
 
   ;; TODO: this referencing may be a performance bottle neck
   (setf (getf glider/const:*game-images* :bg) (load-png #P"assets/bg.png" renderer))
   (setf (getf glider/const:*game-images* :bullet) (load-png #P"assets/bullet.png" renderer)))
 
 (defun game-proc (renderer)
-  (set-render-draw-color renderer 0 0 20 255)
-  (set-render-draw-blend-mode renderer :add)
-  (render-clear renderer)
-  (funcall (global-scene-fn *global*) renderer)
-  (render-copy renderer (texture-texture (getf *game-images* :bg))
-               :dest-rect (make-rect 0 0 1200 800)))
+  (funcall (global-scene-fn *global*) renderer))
 
 (defun game-main ()
   (with-init (:video)
