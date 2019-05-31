@@ -24,14 +24,15 @@
     (when idx
       (aref (vm-actors vm) idx))))
 
-(defun vm-fire (vm sx sy act-fn)
+(defun vm-fire (vm sx sy act-fn draw-fn)
   (let ((a (alloc-actor vm)))
     (when a
       (setf (actor-available? a) t
             (actor-x a) sx
             (actor-y a) sy
             (actor-start-tick a) (vm-tick vm)
-            (actor-act-fn a) act-fn))))
+            (actor-act-fn a) act-fn
+            (actor-draw-fn a) draw-fn))))
 
 (defun execute (vm)
   (loop

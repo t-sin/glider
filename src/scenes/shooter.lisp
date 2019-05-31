@@ -53,6 +53,14 @@
           (< y y1) (< y2 y)))))
 
 ;; TODO: use queues (instead of plain lists)
+(defun default-drawer (renderer a)
+    (multiple-value-bind (x y)
+        (onto-screen (actor-x a) (actor-y a))
+      (set-render-draw-color renderer 0 255 100 100)
+      (let* ((r 10)
+             (r/2 (floor (/ r 2))))
+        (render-fill-rect renderer (make-rect (- x r/2) (- y r/2) r r)))))
+
 (defun make-event ()
   `((0 . (:fire ,(/ *shooter-width* 2) 100
           ,($when (%count-n? 2)
@@ -60,31 +68,26 @@
                                                 (%move-2 #'sin (%rotate 72) 1 14))
                                          ($when (%out-of? 0 0 *shooter-width* *shooter-height*)
                                                 ($disable))))
-                          5))))
+                          5))
+          ,#'default-drawer))
     (100 . (:fire ,(- (/ *shooter-width* 2) 150) 70
             ,($when (%count-n? 13)
                     ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 1 3) 3)))
-                            7))))
+                            7))
+            ,#'default-drawer))
     (100 . (:fire ,(+ (/ *shooter-width* 2) 150) 70
             ,($when (%count-n? 13)
                     ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 -1 3) 3)))
-                            7))))
+                            7))
+          ,#'default-drawer))
     (200 . (:fire ,(/ *shooter-width* 2) 200
             ,($progn (apply #'$move (%move-1 (%aim 10 200) 5))
                      ($schedule
                       `(10 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
                       `(20 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
-                      `(30 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))))))
+                      `(30 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))))
+          ,#'default-drawer))
     ))
-
-(defun default-drawer ()
-  (lambda (renderer a)
-    (multiple-value-bind (x y)
-        (onto-screen (actor-x a) (actor-y a))
-      (set-render-draw-color renderer 0 255 100 100)
-      (let* ((r 10)
-             (r/2 (floor (/ r 2))))
-        (render-fill-rect renderer (make-rect (- x r/2) (- y r/2) r r))))))
 
 (defun init-shooter (g)
   (let ((actors (init-actors)))
