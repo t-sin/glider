@@ -12,6 +12,7 @@
   (setf *global* (make-global))
   (setf (global-scene-fn *global*) (init-shooter *global*))
 
+  ;; TODO: this referencing may be a performance bottle neck
   (setf (getf glider/const:*game-images* :bg) (load-png #P"assets/bg.png" renderer))
   (setf (getf glider/const:*game-images* :bullet) (load-png #P"assets/bullet.png" renderer)))
 
