@@ -6,7 +6,8 @@
         #:glider/util
         #:glider/vm
         #:glider/actors
-        #:glider/combinators)
+        #:glider/combinators
+        #:glider/tools/pps)
   (:export #:init-title))
 (in-package #:glider/scenes/title)
 
@@ -29,13 +30,37 @@
                               (floor (+ (actor-x a) (car p2)))
                               (floor (+ (actor-y a) (cdr p2))))))))
 
+(let ((title-text (read-ps (asdf:system-relative-pathname :glider "assets/test.ps"))))
+  (defun make-title-drawer (s)
+    (lambda (renderer a)
+      (dolist (path title-text)
+        (let ((len (length path)))
+          (loop
+            :for i :from 0 :below len
+            :for p1 := (nth i path)
+            :for p2 := (nth (mod (1+ i) len) path)
+            :do (render-draw-line renderer
+                                  (floor (+ (actor-x a) (* s (car p1))))
+                                  (floor (+ (actor-y a) (* s (cdr p1))))
+                                  (floor (+ (actor-x a) (* s (car p2))))
+                                  (floor (+ (actor-y a) (* s (cdr p2)))))))))))
+
+(defun make-buruburu ()
+  (flet ((%zero ()
+           (lambda (vm a sfn) 0))
+         (%move (f)
+           (lambda (vm a sfn)
+             (* 7 (funcall f (to-rad (* (- (vm-tick vm) (actor-start-tick a)) 7)))))))
+    ($move (%zero) (%zero))))
+
 (defun make-event ()
   `((0 . (:fire 100 400 ,#'$id ,(make-rpolygon-drawer 20 3)))
     (0 . (:fire 210 400 ,#'$id ,(make-rpolygon-drawer 20 4)))
     (0 . (:fire 320 400 ,#'$id ,(make-rpolygon-drawer 20 5)))
     (0 . (:fire 100 510 ,#'$id ,(make-rpolygon-drawer 20 6)))
     (0 . (:fire 210 510 ,#'$id ,(make-rpolygon-drawer 20 7)))
-    (0 . (:fire 320 510 ,#'$id ,(make-rpolygon-drawer 20 8)))))
+    (0 . (:fire 320 510 ,#'$id ,(make-rpolygon-drawer 20 8)))
+    (0 . (:fire 100 300 ,(make-buruburu) ,(make-title-drawer 7)))))
 
 (defun init-title (g)
   (let ((actors (init-actors)))
