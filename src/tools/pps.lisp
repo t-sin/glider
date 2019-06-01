@@ -1,8 +1,12 @@
 (defpackage #:glider/tools/pps
   (:use #:cl)
   (:export #:parse-ps
+           #:interpret-ps
            #:read-ps))
 (in-package #:glider/tools/pps)
+
+;;;; Psuedo PostScript
+;; the imitated PostScript interpreter for extracting points on paths
 
 (defpackage #:glider/tools/pps/symbols
   (:use) (:export))
@@ -23,6 +27,7 @@
   (let ((program))
     (loop
       :for c := (peek-char nil stream nil :eof)
+      :until (eq c :eof)
       :do (cond
             ;; returns parsed program
             ((eq c :eof)
@@ -55,8 +60,10 @@
                      program)))
 
             ;; numbers
-            ((digit-char-p c)
+            ((or (digit-char-p c) (char= c #\-))
              (let ((token))
+               (when (char= c #\-)
+                 (read-char stream))
                (loop
                  :for c := (peek-char nil stream nil :eof)
                  :while (or (digit-char-p c) (char= c #\.))
@@ -92,9 +99,61 @@
       (error "unclosed executable array '}'."))
     (nreverse program)))
 
-;; (defun psuedo-interpret (program)
-;;   ())
+(defstruct pitp  ;; psuedo interpreter state
+  stack dict tmppath paths)
+
+(defun interpret (itp program)
+  (loop
+    :for p :in program
+    :do (case (token-type p)
+          (:lit (push p (pitp-stack itp)))
+          (:num (push p (pitp-stack itp)))
+          (:ex (push p (pitp-stack itp)))
+          (:name (let ((ex (getf (pitp-dict itp) (token-value p))))
+                   (when (null ex)
+                     (error (format nil "unknown executable name '~s'" (token-value p))))
+                   (if (functionp ex)
+                       (funcall ex itp)
+                       (interpret itp (token-value ex))))))))
+
+(defun make-ex (name fn)
+  (list (intern name :glider/tools/pps) fn))
+
+(defun fake-ex (name)
+  (make-ex name #'identity))
+
+(defun init-dict ()
+  (append
+   ;; prepend postscript procedures
+   (fake-ex "where") (fake-ex "ifelse") (fake-ex "lt") (fake-ex "if")
+   (fake-ex "bind") (fake-ex "def")
+   (fake-ex "cairo_set_page_size")
+   (fake-ex "rectclip") (fake-ex "showpage")
+   (fake-ex "q") (fake-ex "Q") (fake-ex "cm") (fake-ex "g")
+   (fake-ex "l") (fake-ex "f")
+
+   ;; get points
+   (make-ex "m" (lambda (itp)
+                  (setf (pitp-tmppath itp)
+                        (list (cons (pop (pitp-stack itp))
+                                    (pop (pitp-stack itp)))))))
+   (make-ex "c" (lambda (itp)
+                  (dotimes (i 4)  ; control points are discarded
+                    (pop (pitp-stack itp)))
+                  (push (cons (pop (pitp-stack itp))
+                              (pop (pitp-stack itp)))
+                        (pitp-tmppath itp))))
+   (make-ex "h" (lambda (itp)
+                  (push (pitp-tmppath itp) (pitp-paths itp))
+                  (setf (pitp-tmppath itp) nil)))
+   ))
+
+(defun interpret-ps (program)
+  (let ((itp (make-pitp :stack nil
+                               :dict (init-dict))))
+    (interpret itp program)
+    (pitp-paths itp)))
 
 (defun read-ps (pathname)
   (with-open-file (in pathname :direction :input)
-    (parse-ps in)))
+    (interpret-ps (parse-ps in))))

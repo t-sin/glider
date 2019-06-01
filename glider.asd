@@ -9,6 +9,9 @@
   :components ((:module "src"
                 :components ((:file "const")
                              (:file "util")
+                             (:module "tools"
+                              :components ((:file "pps"))
+                              :serial t)
                              (:module "shooter"
                               :components ((:file "actors")
                                            (:file "vm")
