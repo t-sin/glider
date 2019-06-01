@@ -56,7 +56,7 @@
                  :do (push (read-char stream) token))
                (push (make-token :type :lit
                                  :value (intern (coerce (nreverse token) 'string)
-                                                :glider/tools/pps))
+                                                :glider/tools/pps/symbols))
                      program)))
 
             ;; numbers
@@ -93,7 +93,7 @@
                  :do (push (read-char stream) token))
                (push (make-token :type :name
                                  :value (intern (coerce (nreverse token) 'string)
-                                                :glider/tools/pps))
+                                                :glider/tools/pps/symbols))
                      program)))))
     (when rec-p
       (error "unclosed executable array '}'."))
@@ -117,7 +117,7 @@
                        (interpret itp (token-value ex))))))))
 
 (defun make-ex (name fn)
-  (list (intern name :glider/tools/pps) fn))
+  (list (intern name :glider/tools/pps/symbols) fn))
 
 (defun fake-ex (name)
   (make-ex name #'identity))
@@ -130,27 +130,34 @@
    (fake-ex "cairo_set_page_size")
    (fake-ex "rectclip") (fake-ex "showpage")
    (fake-ex "q") (fake-ex "Q") (fake-ex "cm") (fake-ex "g")
-   (fake-ex "l") (fake-ex "f")
+   (fake-ex "f") (fake-ex "re")
 
    ;; get points
    (make-ex "m" (lambda (itp)
                   (setf (pitp-tmppath itp)
-                        (list (cons (pop (pitp-stack itp))
-                                    (pop (pitp-stack itp)))))))
+                        (let ((y (token-value (pop (pitp-stack itp))))
+                              (x (token-value (pop (pitp-stack itp)))))
+                          (list (cons x y))))))
    (make-ex "c" (lambda (itp)
                   (dotimes (i 4)  ; control points are discarded
                     (pop (pitp-stack itp)))
-                  (push (cons (pop (pitp-stack itp))
-                              (pop (pitp-stack itp)))
+                  (push (let ((y (token-value (pop (pitp-stack itp))))
+                              (x (token-value (pop (pitp-stack itp)))))
+                          (cons x y))
+                        (pitp-tmppath itp))))
+   (make-ex "l" (lambda (itp)
+                  (push (let ((y (token-value (pop (pitp-stack itp))))
+                              (x (token-value (pop (pitp-stack itp)))))
+                          (cons x y))
                         (pitp-tmppath itp))))
    (make-ex "h" (lambda (itp)
-                  (push (pitp-tmppath itp) (pitp-paths itp))
+                  (push (nreverse (pitp-tmppath itp)) (pitp-paths itp))
                   (setf (pitp-tmppath itp) nil)))
    ))
 
 (defun interpret-ps (program)
   (let ((itp (make-pitp :stack nil
-                               :dict (init-dict))))
+                        :dict (init-dict))))
     (interpret itp program)
     (pitp-paths itp)))
 
