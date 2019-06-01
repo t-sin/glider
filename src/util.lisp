@@ -18,9 +18,8 @@
           (floor (+ *shooter-offset-y* y))))
 
 (defun load-png (filename renderer)
-  (sdl2-image:init '(:png))
   (let ((surface (sdl2-image:load-image filename)))
     (make-texture :renderer renderer
-                  :width (surface-width surface)
-                  :height (surface-height surface)
-                  :texture (create-texture-from-surface renderer surface))))
+                  :width (sdl2:surface-width surface)
+                  :height (sdl2:surface-height surface)
+                  :texture (sdl2:create-texture-from-surface renderer surface))))

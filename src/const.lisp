@@ -9,6 +9,7 @@
            #:*shooter-height*
            #:*game-images*
 
+           #:make-texture
            #:texture-renderer
            #:texture-width
            #:texture-height
