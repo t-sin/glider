@@ -80,7 +80,8 @@
     (vm-fire vm (actor-x a) (actor-y a) 
              (lambda (vm a %sfn)
                (declare (ignore %sfn))
-               (funcall f vm a sfn)))))
+               (funcall f vm a sfn))
+             (actor-draw-fn a))))
 
 (defun $disable ()
   (lambda (vm a sfn)

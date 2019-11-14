@@ -93,7 +93,7 @@
   (let ((actors (init-actors)))
     (loop
       :for a :across actors
-      :do (setf (actor-draw-fn a) (default-drawer)
+      :do (setf (actor-draw-fn a) #'default-drawer
                 (actor-sfn a) (lambda () nil)))
     (setf (global-vm g) (make-vm :tick 0
                                  :actors actors
