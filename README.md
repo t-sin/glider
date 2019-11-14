@@ -1,4 +1,4 @@
-# Algae Glider - functional-bullet-hell shooter
+# Glider - functional-bullet-hell shooter
 
 ![sketch](algae-gliders.png)
 
