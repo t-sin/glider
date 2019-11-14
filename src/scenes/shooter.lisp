@@ -72,16 +72,20 @@
           ,#'default-drawer))
     (100 . (:fire ,(- (/ *shooter-width* 2) 150) 70
             ,($when (%count-n? 13)
-                    ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 1 3) 3)))
+                    ($times ($fire ($progn (apply #'$move (%move-1 (%aim-n-way 10 1 3) 3))
+                                           ($when (%out-of? 0 0 *shooter-width* *shooter-height*)
+                                                  ($disable))))
                             7))
             ,#'default-drawer))
     (100 . (:fire ,(+ (/ *shooter-width* 2) 150) 70
             ,($when (%count-n? 13)
-                    ($times ($fire (apply #'$move (%move-1 (%aim-n-way 10 -1 3) 3)))
+                    ($times ($fire ($progn (apply #'$move (%move-1 (%aim-n-way 10 -1 3) 3))
+                                           ($when (%out-of? 0 0 *shooter-width* *shooter-height*)
+                                                  ($disable))))
                             7))
           ,#'default-drawer))
-    (200 . (:fire ,(/ *shooter-width* 2) 200
-            ,($progn (apply #'$move (%move-1 (%aim 10 200) 5))
+    (200 . (:fire 0 50
+            ,($progn (apply #'$move (%move-1 (%aim (/ *shooter-width* 2) (* 0.9 *shooter-height*)) 5))
                      ($schedule
                       `(10 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
                       `(20 . ,($fire (apply #'$move (%move-1 (%aim 10 10) 1))))
